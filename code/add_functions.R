@@ -10,40 +10,40 @@
 ##########################################
 
 ## JSON manipulatino
-library(jsonlite)
-library(rjson)
-library(RJSONIO)
+suppressPackageStartupMessages(library(jsonlite))
+suppressPackageStartupMessages(library(rjson))
+suppressPackageStartupMessages(library(RJSONIO))
 ## Urls manipulation
-library(RCurl)
+suppressPackageStartupMessages(library(RCurl))
 ## Manejo de arreglos
-library(plyr)
-library(dplyr)
-library(tidyr)
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(dplyr))
+suppressPackageStartupMessages(library(tidyr))
 ## Manejo de cadenas de caracteres
-library(stringr)
+suppressPackageStartupMessages(library(stringr))
 ## Manejo de data frames
-library(data.table)
+suppressPackageStartupMessages(library(data.table))
 ## Predicción
-library(caret)
+suppressPackageStartupMessages(library(caret))
 ## Geoespacial
-library(geosphere)
-library(maps)
-library(maptools)
-library(spatstat)
-library(rgeos)
-library(rgdal)
+suppressPackageStartupMessages(library(geosphere))
+suppressPackageStartupMessages(library(maps))
+suppressPackageStartupMessages(library(maptools))
+suppressPackageStartupMessages(library(spatstat))
+suppressPackageStartupMessages(library(rgeos))
+suppressPackageStartupMessages(library(rgdal))
 ## Gráficas
-library(ggplot2)
+suppressPackageStartupMessages(library(ggplot2))
 ## Otros
-library(ggmap)
-library(deldir)
-library(rje)
-library(sp)
-library(SDMTools)
-library(PBSmapping)
-library(sp)
-library(prevR)
-library(foreign)
+suppressPackageStartupMessages(library(ggmap))
+suppressPackageStartupMessages(library(deldir))
+suppressPackageStartupMessages(library(rje))
+suppressPackageStartupMessages(library(sp))
+suppressPackageStartupMessages(library(SDMTools))
+suppressPackageStartupMessages(library(PBSmapping))
+suppressPackageStartupMessages(library(sp))
+suppressPackageStartupMessages(library(prevR))
+suppressPackageStartupMessages(library(foreign))
 
 ########################################
 ## Functions
@@ -168,10 +168,10 @@ trans_coord <- function(coord, pow = 1){
 tesselate <- function(grids,
                      map          = NULL,
                      alpha        = .3,
-                     top_left     = c(-118.383398, 32.948893),
-                     bottom_left  = c(-118.383398, 14.160275),
-                     top_right    = c(-86.783107,  32.948893),
-                     bottom_right = c(-86.783107,  14.160275)){
+                     top_left     = c(-101.00, 26.2),
+                     bottom_left  = c(-101.00, 25.0),
+                     top_right    = c(-99.80, 26.2),
+                     bottom_right = c(-99.80, 25.0)){
   results  <- list()
   intercepts <- ceiling(sqrt(grids+1))
   h_lines <- data.frame(x    = rep(top_left[1], intercepts),
@@ -249,21 +249,20 @@ in.block <- function(block, pop){
   pop.block <- list()
   for ( i in 1:length(block)){
   print(i)
-  list   <- block[[i]]
-  pop.xreduce   <- c()
+  list         <- block[[i]]
+  pop.xreduce  <- c()
   pop.xyreduce <- c()
   # Obtiene localidades cuyas coordenadas caigan dentro de la celda i
-  pop.xreduce   <- pop[pop[, 1] > as.numeric(list[[1]][1]), ]
-  pop.xreduce   <- pop.xreduce[pop.xreduce[, 1] < as.numeric(list[[2]][1]), ]
+  pop.xreduce  <- pop[pop[, 1] > as.numeric(list[[1]][1]), ]
+  pop.xreduce  <- pop.xreduce[pop.xreduce[, 1] < as.numeric(list[[2]][1]), ]
   pop.xyreduce <- pop.xreduce[pop.xreduce[, 2] > as.numeric(list[[2]][2]), ]
   pop.xyreduce <- pop.xyreduce[pop.xyreduce[, 2] < as.numeric(list[[1]][2]), ]
   ## Una vez seleccionadas las localidades obtiene datos relevantes.
-  data.block <- list()
-  data.block[[1]] <- list                             ## coordenadas extremas de cada celda
+  data.block         <- list()
+  data.block[[1]]    <- list                          ## coordenadas extremas de cada celda
   pop.xyreduce$celda <- rep(i,nrow(pop.xyreduce))
-  data.block[[2]] <- pop.xyreduce                     ## datos de las localidades
-  data.block[[3]] <- sum(pop.xyreduce[, 3])           ## población por celda
-  ## data.block[[4]] <- mean(pop.xyreduce[, 4])      ## altura promedio de la celda
+  data.block[[2]]    <- pop.xyreduce                  ## datos de las localidades
+  data.block[[3]]    <- sum(pop.xyreduce[, 3])        ## población por celda
   data.block[[4]] <-  areaPolygon(matrix(
       c(data.block[[1]][[1]][1],data.block[[1]][[1]][2],
         data.block[[1]][[2]][1],data.block[[1]][[1]][2],
@@ -334,304 +333,4 @@ resRelevant <- function(list){
     result
     })
 }
-
-#######################################
-## Read in data
-#######################################
-## Shapes Services per municipality
-## Get all possible dirs
-files <- list.dirs("../datos/shps") 
-files <- files[!str_detect(files, "metadatos")]
-files <- files[!str_detect(files, "catalogos")]
-files <- files[-1]
-municipalities <- list()
-services <- list()
-## -----------------------------
-## Read in all shapes
-## -----------------------------
-for(i in 1:length(files)){
-    state <- str_split(files[i], "/")[[1]][4]
-    ## Read in services
-    service_name <- paste0(state, "_servicios_puntual" )
-    services[[i]] <- readOGR(files[i],
-                            service_name)
-    ## Read in municipalities
-    mun_name <- paste0(state, "_municipio" )
-    services[[i]] <- readOGR(files[i],
-                            mun_name)
-}
-
-## Denue
-denue <- readOGR("../datos/denue_shps/tabasco",
-                "DENUE_INEGI_27_")
-## Population
-censo <- read.dbf("../datos/censo.dbf")
-censo <- censo[!is.na(censo$LATITUD),]
-
-## proc coords
-coords <- censo[,c(7,8)]
-coords[, 1] <- laply(coords[,1], function(t)t <- trans_coord(t))
-coords[, 2] <- laply(coords[,2], function(t)t <- trans_coord(t,0))
-censo[,c(7,8)] <- coords
-write.csv(censo[,1:10], "./datos/censo_filter.csv", row.names = FALSE)
-
-## Filter censo inside 
-coords <- censo[, c(7,8)]
-coordinates(coords) <- c("LONGITUD", "LATITUD")
-proj4string(coords) <- proj4string(mun)
-inside  <- !is.na(over(coords, as(mun, "SpatialPolygons")))
-censo.int   <- censo[inside,]
-
-#######################################
-## Filter relevant data DENUE
-#######################################
-## Escuelas
-escuelas <- denue[str_detect(denue$codigo_act, "^61.*" ),]
-## Hospitales
-hospitales <- denue[str_detect(denue$codigo_act, "^62.*" ),]
-## Energía
-energia <- denue[str_detect(denue$codigo_act, "^22.*" ),]
-## Gasolina
-gasolina <- denue[str_detect(denue$codigo_act, "468411" ),]
-
-
-
-
-########################################
-## Voronoi with Euclidean Distance
-########################################
-W  <- as(shp.mun, "owin")  
-X  <- ppp(x = data.pop[data.pop$MUN == cve_mun, 7],
-        y = data.pop[data.pop$MUN == cve_mun, 8],
-         window = W)
-voronoi_map1 <- dirichlet(X)
-map1 <- as(voronoi_map1, "SpatialPolygons")
-
-
-## To Shape Tess Voronoi
-plot(map1)
-SPDF <- SpatialPolygonsDataFrame(map1,
-                                data=data.frame(x=data.pop[data.pop$MUN == cve_mun, 7],
-                                                y=data.pop[data.pop$MUN == cve_mun, 8],
-                                                row.names=row.names(map1)))
-writeOGR(SPDF,
-         "./datos_out",
-         "villa_corzo",
-        driver = "ESRI Shapefile")
-
-########################################
-## Get Connect data.pop
-########################################
-connect_pnts <- get_connect(
-             data.pop[,8],
-             data.pop[,7]
-)
-
-## Network parameters
-
-data.connect <- llply(connect_pnts,
-                     function(t) {if(length(t$networkRank[[1]]) == 3){
-                                 t <- t$networkRank[[1]]$type3G
-                                 }
-                                 else
-                                 t <- NA
-                     }
-                     )
-rssiAsu <- c()
-reliability <- c()
-for(i in data.connect){
-      if(!is.na(i)){
-        if(class(i) == "list"){
-        rssiAsu <- c(rssiAsu, i$averageRssiAsu)
-        reliability <- c(reliability, i$reliability)
-        }else{
-        rssiAsu <- c(rssiAsu, i[4])
-        reliability <- c(reliability, NA)
-}       
-      }
-}
-
-assu <- extract_numeric(rssiAsu)
-writeLines(paste0(assu), "./datos_out/rssiAsu.txt")
-
-relia <- extract_numeric(reliability[!is.na(reliability)])
-########################################
-########################################
-## Villaflores
-########################################
-########################################
-
-########################################
-## Working OGR
-########################################
-
-
-poly <- readOGR("./datos_out/",
-              "villa_flor_1")
-
-coords <- mun.int[, c(7,8)]
-coordinates(coords) <- c("LONGITUD", "LATITUD")
-proj4string(coords) <- proj4string(poly)
-inside  <- !is.na(over(coords, as(poly, "SpatialPolygons")))
-
-##
-plot(poly)
-points(mun.int[inside,7:8])
-##
-pnts.in <- mun.int[inside,]
-pnts.in <- dplyr::filter(pnts.in, POBTOT > 100)
-
-########################################
-## Get distances
-########################################
-all_dist <- distance_matrix(pnts.in[,7:8],
-                           pnts.in[,7:8])
-
-## Maximum of two
-simm.dist <- matrix(NA, nrow = nrow(all_dist),
-                   ncol = ncol(all_dist))
-for(i in 1:nrow(all_dist)){
-    for(j in 1:ncol(all_dist)){
-        simm.dist[i,j] <- max(all_dist[i,j], all_dist[j,i])
-    }    
-}
-
-########################################
-## Data Prim
-########################################
-in.coords <- pnts.in[,7:8]
-size <- nrow(pnts.in)
-x <- c()
-y <- c()
-xend <- c()
-yend <- c()
-costs <- c()
-## Origins
-for(i in 1:size){
-    x <- c(x, rep(in.coords[i,1], size))
-    y <- c(y, rep(in.coords[i,2], size))
-}
-## Destinies
-for(i in 1:size){
-    xend <- c(xend, in.coords[,1])
-    yend <- c(yend, in.coords[,2])
-}
-## Costs
-for(i in 1:size){
-    costs <- c(costs, simm.dist[i,])
-}
-
-G <- data.frame(x = x,
-               y = y,
-               xend = xend,
-               yend = yend,
-               p = costs
-               )
-
-tree <- prim(G)
-
-## Plot tree
-ggplot(data = tree,
-       aes(x = x, y = y, xend = xend, yend = yend)) +
-    geom_segment(col = "purple")
-
-
-ggplot(data = pnts.in,
-              aes(x = LONGITUD,
-                  y = LATITUD)) +
-    geom_point() +
-    geom_text(aes(label = NOM_LOC),  hjust=0, vjust=0 )
-
-
-
-########################################
-########################################
-## Villa Corzo
-########################################
-########################################
-
-########################################
-## Working OGR
-########################################
-
-
-poly <- readOGR("./datos/",
-               "villa_corzo_2")
-
-coords <- mun.int[, c(7,8)]
-coordinates(coords) <- c("LONGITUD", "LATITUD")
-proj4string(coords) <- proj4string(poly)
-inside  <- !is.na(over(coords, as(poly, "SpatialPolygons")))
-
-##
-plot(poly)
-points(mun.int[inside,7:8])
-
-##
-pnts.in <- mun.int[inside,]
-pnts.in <- dplyr::filter(pnts.in, POBTOT > 100)
-
-########################################
-## Get distances
-########################################
-all_dist <- distance_matrix(pnts.in[,7:8],
-                           pnts.in[,7:8])
-
-## Maximum of two
-simm.dist <- matrix(NA, nrow = nrow(all_dist),
-                   ncol = ncol(all_dist))
-for(i in 1:nrow(all_dist)){
-    for(j in 1:ncol(all_dist)){
-        simm.dist[i,j] <- max(all_dist[i,j], all_dist[j,i])
-    }    
-}
-
-########################################
-## Data Prim
-########################################
-in.coords <- pnts.in[,7:8]
-size <- nrow(pnts.in)
-x <- c()
-y <- c()
-xend <- c()
-yend <- c()
-costs <- c()
-## Origins
-for(i in 1:size){
-    x <- c(x, rep(in.coords[i,1], size))
-    y <- c(y, rep(in.coords[i,2], size))
-}
-## Destinies
-for(i in 1:size){
-    xend <- c(xend, in.coords[,1])
-    yend <- c(yend, in.coords[,2])
-}
-## Costs
-for(i in 1:size){
-    costs <- c(costs, simm.dist[i,])
-}
-
-G <- data.frame(x = x,
-               y = y,
-               xend = xend,
-               yend = yend,
-               p = costs
-               )
-
-tree <- prim(G)
-## Plot tree
-ggplot(data = tree,
-       aes(x = x, y = y, xend = xend, yend = yend)) +
-    geom_segment(col = "purple")
-
-
-ggplot(data = pnts.in,
-              aes(x = LONGITUD,
-                  y = LATITUD)) +
-    geom_point() +
-    geom_text(aes(label = NOM_LOC),  hjust=0, vjust=0 )
-
-
-
-
 
