@@ -168,10 +168,10 @@ trans_coord <- function(coord, pow = 1){
 tesselate <- function(grids,
                      map          = NULL,
                      alpha        = .3,
-                     top_left     = c(-101.00, 26.2),
-                     bottom_left  = c(-101.00, 25.0),
-                     top_right    = c(-99.80, 26.2),
-                     bottom_right = c(-99.80, 25.0)){
+                     top_left     = c(-101.20, 27.9),
+                     bottom_left  = c(-101.20, 23.16),
+                     top_right    = c(-98.23, 27.9),
+                     bottom_right = c(-98.23, 23.16)){
   results  <- list()
   intercepts <- ceiling(sqrt(grids+1))
   h_lines <- data.frame(x    = rep(top_left[1], intercepts),
@@ -263,7 +263,7 @@ in.block <- function(block, pop){
   pop.xyreduce$celda <- rep(i,nrow(pop.xyreduce))
   data.block[[2]]    <- pop.xyreduce                  ## datos de las localidades
   data.block[[3]]    <- sum(pop.xyreduce[, 3])        ## población por celda
-  data.block[[4]] <-  areaPolygon(matrix(
+  data.block[[4]]    <-  areaPolygon(matrix(
       c(data.block[[1]][[1]][1],data.block[[1]][[1]][2],
         data.block[[1]][[2]][1],data.block[[1]][[1]][2],
         data.block[[1]][[2]][1],data.block[[1]][[2]][2],

@@ -25,7 +25,7 @@ data <- data[, c(7, 8, 10)]
 ## MAP
 ## ---------------------------------
 map         <- get_map(location = "Monterrey",
-                      zoom     = 10,
+                      zoom     = 8,
                       maptype  = "roadmap")
 map.plot  <- ggmap(map)
 
@@ -91,7 +91,7 @@ map.plot + geom_point(data      = pts_denu_nl,
 
 ### Size of cells ??
 ### Partition
-grid      <- 5e4                                      # Number of cells
+grid      <- 1e4                                      # Number of cells
 tes       <- tesselate(grid,  map.plot, alpha = .05)  # Partition
 block     <- blocks(tes[[2]], tes[[3]])               # Cell creation
 cell_feat <- in.block(block,  pts_denu_nl)            # Cell characteristics
@@ -99,6 +99,7 @@ cell_feat <- in.block(block,  pts_denu_nl)            # Cell characteristics
 ## Save Results
 testJson <- RJSONIO::toJSON(cell_feat)
 write(testJson, "../data/output/cell_data.json")
+## cell_feat <- rjson::fromJSON(file = "../data/output/cell_data.json")
 
 ## Save Results
 blockJson <- RJSONIO::toJSON(block)
@@ -127,7 +128,7 @@ block_cp <- laply(cell_feat,
                      aux$x[order(aux$freq, decreasing = TRUE)][1]
                  })
 
-## Blocks over monterrey
+## Blocks over Nuevo León
 mun_nl    <- readOGR("../data/denue/nl",
                     "nl_municipio")
 
@@ -146,9 +147,9 @@ for(i in 1:length(blocks)){
                         centers[i,2])
     names(center)        <- c("lon", "lat")
     coordinates(center)  <- c("lon", "lat")
-    proj4string(center)  <- proj4string(monterrey)
+    proj4string(center)  <- proj4string(mun_nl)
     inside[i]            <- !is.na(over(center,
-                                       as(monterrey,
+                                       as(mun_nl,
                                           "SpatialPolygons")))
     print(i)
 }
@@ -164,7 +165,7 @@ for(i in 1:length(blocks)){
 
 ## Save Results
 blockJson <- RJSONIO::toJSON(blocks_in)
-write(blockJson, "../data/output/blocks_in_monterrey.json")
+write(blockJson, "../data/output/blocks_in_mun__nl.json")
 
 ## ------------------------------
 ## Blocks to shapes
@@ -203,5 +204,5 @@ poly      <- SpatialPolygonsDataFrame(
 ## Escribir resultados
 writeOGR(poly,
          "../data/output/blocks",
-         "block_mont",
+         "block_nl",
          driver = "ESRI Shapefile")
