@@ -177,10 +177,12 @@ block_cp <- laply(cell_feat,
 ## Google CP ##
 google_index <- which(is.na(block_cp) & inside) ## este arreglo va a ser para llenar block_cp_inside
 goog_cp      <- data.frame(centers[is.na(block_cp) & inside,])
+goog_cp_estimate <- c()
 for(i in 1:nrow(goog_cp)){
-    goog_cp_estimate <- get_cp(as.numeric(goog_cp[i,]))
+    goog_cp_estimate[i] <- get_cp(as.numeric(goog_cp[i,]))
     print(goog_cp_estimate)
 }
+
 ## Save Results
 blockJson <- RJSONIO::toJSON(blocks_in)
 write(blockJson, "../data/output/blocks_in_mun__nl.json")
