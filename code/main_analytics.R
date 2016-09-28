@@ -32,23 +32,23 @@ map.plot  <- ggmap(map)
 ## ---------------------------------
 ## CP
 ## ---------------------------------
-#shapes_post_nl <- readOGR("../data/nl/",
-#                         "CP_19NL_v2")
+## shapes_post_nl <- readOGR("../data/nl/",
+##                         "CP_19NL_v2")
 
 ## PLOT STRUCTURE
-#shapes_post_nl@data$id = rownames(shapes_post_nl@data)
-#shapes_post_nl.points  = fortify(shapes_post_nl, region = "id")
-#shapes_post_nl.df      = join(shapes_post_nl.points,
-#                              shapes_post_nl@data, by = "id")
+## shapes_post_nl@data$id = rownames(shapes_post_nl@data)
+## shapes_post_nl.points  = fortify(shapes_post_nl, region = "id")
+## shapes_post_nl.df      = join(shapes_post_nl.points,
+##                              shapes_post_nl@data, by = "id")
 
 ## PLOT
-#ggplot(shapes_post_nl.df) +
-#    aes(long, lat, group = group, fill = d_cp) +
-#    geom_polygon() +
-#    geom_path(color = "white") +
-#    coord_equal() +
-#    theme(legend.position="none",
-#          panel.background = element_blank())
+## ggplot(shapes_post_nl.df) +
+##    aes(long, lat, group = group, fill = d_cp) +
+##    geom_polygon() +
+##    geom_path(color = "white") +
+##    coord_equal() +
+##    theme(legend.position="none",
+##          panel.background = element_blank())
 
 ## ---------------------------------
 ## DENUE
@@ -89,21 +89,25 @@ map.plot + geom_point(data      = pts_denu_nl,
 ###########Pruebas###########
 #############################
 
-### Size of cells ??
+### Size of cells
 ### Partition
-grid      <- 1e4                                      # Number of cells
+grid      <- 6400                                     # Number of cells
 tes       <- tesselate(grid,  map.plot, alpha = .05)  # Partition
 block     <- blocks(tes[[2]], tes[[3]])               # Cell creation
 cell_feat <- in.block(block,  pts_denu_nl)            # Cell characteristics
 
+## Data population
+data_pop  <- in.block(block, data)
+allpop_1  <- laply(data_pop, function(t)t <- t[[3]])
+
 ## Save Results
-testJson <- RJSONIO::toJSON(cell_feat)
-write(testJson, "../data/output/cell_data.json")
+## testJson <- RJSONIO::toJSON(cell_feat)
+## write(testJson, "../data/output/cell_data.json")
 ## cell_feat <- rjson::fromJSON(file = "../data/output/cell_data.json")
 
 ## Save Results
-blockJson <- RJSONIO::toJSON(block)
-write(blockJson, "../data/output/all_blocks.json")
+## blockJson <- RJSONIO::toJSON(block)
+## write(blockJson, "../data/output/all_blocks.json")
 
 ## ------------------------------
 ## Análisis
@@ -112,37 +116,30 @@ write(blockJson, "../data/output/all_blocks.json")
 areatest_1 <- laply(cell_feat, function(t)t <- t[[4]])
 
 ## Observaciones por celda
-obs_1 <- laply(cell_feat, function(t)t <- nrow(t[[2]]))
+obs_1      <- laply(cell_feat, function(t)t <- nrow(t[[2]]))
 
 ## ------------------------------
 ## Operations with blocks
 ## ------------------------------
 
 ## Read in data
-blocks   <- rjson::fromJSON(file = "../data/output/all_blocks.json")
-
-## Block CP
-block_cp <- laply(cell_feat,
-                 function(t) t <- {
-                     aux = plyr::count(t[[2]]$Código.Postal)
-                     aux$x[order(aux$freq, decreasing = TRUE)][1]
-                 })
+## blocks   <- rjson::fromJSON(file = "../data/output/all_blocks.json")
 
 ## Blocks over Nuevo León
-mun_nl    <- readOGR("../data/denue/nl",
-                    "nl_municipio")
+mun_nl    <- readOGR("../data/area_example/recorte",
+                    "recorte_municipios")
 
 ## Extract Monterrey
-monterrey <- mun_nl[mun_nl$CVE_MUN == "039",]
+## monterrey <- mun_nl[mun_nl$CVE_MUN == "039",]
 
 ## Block centers
-centers <- laply(blocks,
+centers <- laply(block,
                   function(t)t <- gcIntermediate(t[[1]], t[[2]], 1))
 centers <- unlist(centers)
 
-## Check in Monterrey
+## Check in shape
 inside <- c()
-for(i in 1:length(blocks)){
+for(i in 1:length(block)){
     center <- data.frame(centers[i,1],
                         centers[i,2])
     names(center)        <- c("lon", "lat")
@@ -154,15 +151,36 @@ for(i in 1:length(blocks)){
     print(i)
 }
 
+## Obtain cells inside poligon
 k <- 1
-blocks_in <- list()
-for(i in 1:length(blocks)){
+blocks_in     <- list()
+for(i in 1:length(block)){
     if(inside[i] == TRUE){
-        blocks_in[[k]] <- blocks[[i]]
+        blocks_in[[k]]     <- block[[i]]
         k <- k + 1
     }
 }
 
+## Block CP
+block_cp <- laply(cell_feat,
+                 function(t) t <- {
+                     res <- NA
+                     if(length(t) > 0){
+                         if(length(t[[2]]$Código.Postal) > 0){
+                             aux = plyr::count(t[[2]]$Código.Postal)
+                             res = aux$x[order(aux$freq, decreasing = TRUE)][1]
+                         }
+                     }
+                     res
+                 })
+
+## Google CP ##
+google_index <- which(is.na(block_cp) & inside) ## este arreglo va a ser para llenar block_cp_inside
+goog_cp      <- data.frame(centers[is.na(block_cp) & inside,])
+for(i in 1:nrow(goog_cp)){
+    goog_cp_estimate <- get_cp(as.numeric(goog_cp[i,]))
+    print(goog_cp_estimate)
+}
 ## Save Results
 blockJson <- RJSONIO::toJSON(blocks_in)
 write(blockJson, "../data/output/blocks_in_mun__nl.json")
@@ -197,7 +215,8 @@ poly      <- SpatialPolygonsDataFrame(
     block_shp,
     data.frame(
         PIDS      = paste(seq(1, length(blocks_in), 1), sep = "\n"),
-        block_cp = block_cp[inside]
+        block_cp  = block_cp[inside],
+        block_pop = allpop_1[inside]
     )
 )
 

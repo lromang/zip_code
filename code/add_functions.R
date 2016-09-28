@@ -80,6 +80,26 @@ get_directions <- function(origen, destino, mode = "driving"){
 }
 
 ##-------------------------------------
+## get_address
+##-------------------------------------
+get_cp <- function(point){
+    ##-------------------------------------
+    ## This function uses Google's API directions to
+    ## calculate the driving directions between two given points.
+    ## point  = geografic point in (longitude, latitude) format
+    ##-------------------------------------
+    addr   <- revgeocode(point, output = "all")
+    result <- tryCatch({
+        addr$results[[1]]$address_components[[9]]$short_name
+    }, warning = function(w) {
+        NA
+    }, error = function(e) {
+        NA
+    })
+    result
+}
+
+##-------------------------------------
 ## get_distance
 ##-------------------------------------
 get_distance <- function(origin, destiny){
@@ -168,10 +188,10 @@ trans_coord <- function(coord, pow = 1){
 tesselate <- function(grids,
                      map          = NULL,
                      alpha        = .3,
-                     top_left     = c(-101.20, 27.9),
-                     bottom_left  = c(-101.20, 23.16),
-                     top_right    = c(-98.23, 27.9),
-                     bottom_right = c(-98.23, 23.16)){
+                     top_left     = c(-100.953, 26.163),
+                     bottom_left  = c(-100.953, 25.207),
+                     top_right    = c(-99.619,  26.163),
+                     bottom_right = c(-99.618,  25.207)){
   results  <- list()
   intercepts <- ceiling(sqrt(grids+1))
   h_lines <- data.frame(x    = rep(top_left[1], intercepts),
