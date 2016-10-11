@@ -24,8 +24,8 @@ data <- data[, c(7, 8, 10)]
 ## ---------------------------------
 ## MAP
 ## ---------------------------------
-map         <- get_map(location = "Monterrey",
-                      zoom     = 8,
+map         <- get_map(location = "Torreon",
+                      zoom     = 7,
                       maptype  = "roadmap")
 map.plot  <- ggmap(map)
 
@@ -54,7 +54,7 @@ map.plot  <- ggmap(map)
 ## DENUE
 ## ---------------------------------
 ## READ IN POINTS
-pts_denu_nl    <- read.csv("../data/denue/DENUE_INEGI_19_.csv",
+pts_denu_nl    <- read.csv("../data/denue/DENUE_INEGI_05_.csv",
                           stringsAsFactors = FALSE)
 pts_denu_nl    <- pts_denu_nl[,c(40, 39, 1:38, 41)]
 
@@ -91,7 +91,7 @@ map.plot + geom_point(data      = pts_denu_nl,
 
 ### Size of cells
 ### Partition
-grid      <- 6400                                     # Number of cells
+grid      <- 40000                                    # Number of cells
 tes       <- tesselate(grid,  map.plot, alpha = .05)  # Partition
 block     <- blocks(tes[[2]], tes[[3]])               # Cell creation
 cell_feat <- in.block(block,  pts_denu_nl)            # Cell characteristics
@@ -126,8 +126,34 @@ obs_1      <- laply(cell_feat, function(t)t <- nrow(t[[2]]))
 ## blocks   <- rjson::fromJSON(file = "../data/output/all_blocks.json")
 
 ## Blocks over Nuevo León
-mun_nl    <- readOGR("../data/area_example/recorte",
-                    "recorte_municipios")
+mun_nl    <- readOGR("../data/area_example/recorte_torre/torreon_matamoros",
+                    "torreon_matamoros")
+
+
+
+## Zip codes
+zip_code_nl    <- readOGR("../data/zip_code/cp_mon",
+                         "CP_mon")
+
+proj4string(zip_code_nl) <- CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0")
+
+zip_test <- spTransform(zip_code_nl, CRS("+proj=longlat +datum=WGS84 +no_defs +ellps=WGS84 +towgs84=0,0,0"))
+
+writeOGR(zip_test,
+         "../data/output/zip_nl",
+         "new_nl",
+         driver = "ESRI Shapefile")
+
+ggplot(data = zip_test,
+    aes(long, lat, group = group))+
+geom_polygon()+
+    geom_path(color = "white") +
+    coord_equal() +
+    theme(legend.position="none",
+          panel.background = element_blank())
+## Zip codes
+
+
 
 ## Extract Monterrey
 ## monterrey <- mun_nl[mun_nl$CVE_MUN == "039",]
@@ -224,6 +250,11 @@ poly      <- SpatialPolygonsDataFrame(
 
 ## Escribir resultados
 writeOGR(poly,
-         "../data/output/blocks",
-         "block_nl",
+         "../data/output/blocks/torre",
+         "block_torre",
          driver = "ESRI Shapefile")
+
+
+## TEST PRECISON ##
+centers_in  <- centers[inside,]
+block_cp_in <- block_cp[inside]

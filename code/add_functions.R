@@ -185,13 +185,15 @@ trans_coord <- function(coord, pow = 1){
 ##-------------------------------------
 ## tesselate
 ##-------------------------------------
+## Aquí Monsi...
+## Coordenadas de bloque de interés.
 tesselate <- function(grids,
                      map          = NULL,
                      alpha        = .3,
-                     top_left     = c(-100.953, 26.163),
-                     bottom_left  = c(-100.953, 25.207),
-                     top_right    = c(-99.619,  26.163),
-                     bottom_right = c(-99.618,  25.207)){
+                     top_left     = c(-103.597, 25.795),
+                     bottom_left  = c(-103.597, 24.794),
+                     top_right    = c(-102.660, 25.795),
+                     bottom_right = c(-102.660, 24.794)){
   results  <- list()
   intercepts <- ceiling(sqrt(grids+1))
   h_lines <- data.frame(x    = rep(top_left[1], intercepts),
