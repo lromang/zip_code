@@ -80,8 +80,8 @@ obs_1      <- laply(cell_feat, function(t)t <- nrow(t[[2]]))
 ## Fill in CP
 ## ------------------------------
 ## Read in data
-path_to_shape <- "recorte_saltillo/3mun_salt"
-name_shape    <- "salt_y_3"
+path_to_shape <- "recorte_monterrey/"
+name_shape    <- "recorte_municipios"
 mun_nl        <- readOGR(paste0("../data/area_example/", path_to_shape),
                         name_shape)
 
@@ -211,6 +211,6 @@ poly      <- SpatialPolygonsDataFrame(
 
 ## Escribir resultados
 writeOGR(poly,
-         "../data/output/blocks/saltillo",
-         "block_saltillo",
+         "../data/output/blocks/nl",
+         "block_monterrey",
          driver = "ESRI Shapefile")
