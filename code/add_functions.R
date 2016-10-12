@@ -190,10 +190,10 @@ trans_coord <- function(coord, pow = 1){
 tesselate <- function(grids,
                      map          = NULL,
                      alpha        = .3,
-                     top_left     = c(-103.597, 25.795),
-                     bottom_left  = c(-103.597, 24.794),
-                     top_right    = c(-102.660, 25.795),
-                     bottom_right = c(-102.660, 24.794)){
+                     top_left     = c(-100.976, 26.204),
+                     bottom_left  = c(-100.976, 25.188),
+                     top_right    = c(-99.525, 26.204),
+                     bottom_right = c(-99.525, 25.188)){
   results  <- list()
   intercepts <- ceiling(sqrt(grids+1))
   h_lines <- data.frame(x    = rep(top_left[1], intercepts),

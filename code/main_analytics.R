@@ -24,37 +24,16 @@ data <- data[, c(7, 8, 10)]
 ## ---------------------------------
 ## MAP
 ## ---------------------------------
-map         <- get_map(location = "Torreon",
+map         <- get_map(location = "Monterrey",
                       zoom     = 7,
                       maptype  = "roadmap")
 map.plot  <- ggmap(map)
 
 ## ---------------------------------
-## CP
-## ---------------------------------
-## shapes_post_nl <- readOGR("../data/nl/",
-##                         "CP_19NL_v2")
-
-## PLOT STRUCTURE
-## shapes_post_nl@data$id = rownames(shapes_post_nl@data)
-## shapes_post_nl.points  = fortify(shapes_post_nl, region = "id")
-## shapes_post_nl.df      = join(shapes_post_nl.points,
-##                              shapes_post_nl@data, by = "id")
-
-## PLOT
-## ggplot(shapes_post_nl.df) +
-##    aes(long, lat, group = group, fill = d_cp) +
-##    geom_polygon() +
-##    geom_path(color = "white") +
-##    coord_equal() +
-##    theme(legend.position="none",
-##          panel.background = element_blank())
-
-## ---------------------------------
 ## DENUE
 ## ---------------------------------
 ## READ IN POINTS
-pts_denu_nl    <- read.csv("../data/denue/DENUE_INEGI_05_.csv",
+pts_denu_nl    <- read.csv("../data/denue/DENUE_INEGI_19_.csv",
                           stringsAsFactors = FALSE)
 pts_denu_nl    <- pts_denu_nl[,c(40, 39, 1:38, 41)]
 
@@ -68,29 +47,16 @@ map.plot + geom_point(data      = pts_denu_nl,
                       size  = .5) +
     theme(legend.position  = "none",
           panel.background = element_blank())
-## Shape
-#shapes_denu_nl <- readOGR("../data/denue/nl",
-#                         "nl_localidad_urbana_y_rural_amanzanada")
-
-#shapes_denu_nl@data$id = rownames(shapes_denu_nl@data)
-#shapes_denu_nl.points  = fortify(shapes_denu_nl, region = "id")
-#shapes_denu_nl.df      = join(shapes_denu_nl.points,
-#                              shapes_denu_nl@data, by = "id")
-## PLOT
-#map.plot +
-#    geom_polygon(data = shapes_denu_nl.df,
-#    aes(long, lat, group = group, fill = CVE_MUN))+
-#    geom_path(color = "white") +
-#    coord_equal() +
-#    theme(legend.position="none",
-#          panel.background = element_blank())
 
 #############################
 ###########Pruebas###########
 #############################
 
-### Size of cells
-### Partition
+## ---------------------------------
+## Tesselate
+## ---------------------------------
+
+## Partition
 grid      <- 40000                                    # Number of cells
 tes       <- tesselate(grid,  map.plot, alpha = .05)  # Partition
 block     <- blocks(tes[[2]], tes[[3]])               # Cell creation
@@ -100,18 +66,10 @@ cell_feat <- in.block(block,  pts_denu_nl)            # Cell characteristics
 data_pop  <- in.block(block, data)
 allpop_1  <- laply(data_pop, function(t)t <- t[[3]])
 
-## Save Results
-## testJson <- RJSONIO::toJSON(cell_feat)
-## write(testJson, "../data/output/cell_data.json")
-## cell_feat <- rjson::fromJSON(file = "../data/output/cell_data.json")
-
-## Save Results
-## blockJson <- RJSONIO::toJSON(block)
-## write(blockJson, "../data/output/all_blocks.json")
-
 ## ------------------------------
-## Análisis
+## Analysis
 ## ------------------------------
+
 ## Área por celda
 areatest_1 <- laply(cell_feat, function(t)t <- t[[4]])
 
@@ -119,19 +77,20 @@ areatest_1 <- laply(cell_feat, function(t)t <- t[[4]])
 obs_1      <- laply(cell_feat, function(t)t <- nrow(t[[2]]))
 
 ## ------------------------------
-## Operations with blocks
+## Fill in CP
 ## ------------------------------
-
 ## Read in data
-## blocks   <- rjson::fromJSON(file = "../data/output/all_blocks.json")
-
-## Blocks over Nuevo León
-mun_nl    <- readOGR("../data/area_example/recorte_torre/torreon_matamoros",
-                    "torreon_matamoros")
-
+path_to_shape <- "recorte_saltillo/3mun_salt"
+name_shape    <- "salt_y_3"
+mun_nl        <- readOGR(paste0("../data/area_example/", path_to_shape),
+                        name_shape)
 
 
-## Zip codes
+
+## ------------------------------
+## Change Zip Code polygon
+## projection.
+## ------------------------------
 zip_code_nl    <- readOGR("../data/zip_code/cp_mon",
                          "CP_mon")
 
@@ -151,14 +110,10 @@ geom_polygon()+
     coord_equal() +
     theme(legend.position="none",
           panel.background = element_blank())
-## Zip codes
 
-
-
-## Extract Monterrey
-## monterrey <- mun_nl[mun_nl$CVE_MUN == "039",]
-
+## ------------------------------
 ## Block centers
+## ------------------------------
 centers <- laply(block,
                   function(t)t <- gcIntermediate(t[[1]], t[[2]], 1))
 centers <- unlist(centers)
@@ -177,7 +132,10 @@ for(i in 1:length(block)){
     print(i)
 }
 
-## Obtain cells inside poligon
+## ------------------------------
+## Filter cells to be inside
+## polygon
+## ------------------------------
 k <- 1
 blocks_in     <- list()
 for(i in 1:length(block)){
@@ -200,7 +158,10 @@ block_cp <- laply(cell_feat,
                      res
                  })
 
-## Google CP ##
+
+## ------------------------------
+## Google CP (Don't Run)
+## ------------------------------
 google_index <- which(is.na(block_cp) & inside) ## este arreglo va a ser para llenar block_cp_inside
 goog_cp      <- data.frame(centers[is.na(block_cp) & inside,])
 goog_cp_estimate <- c()
@@ -214,7 +175,7 @@ blockJson <- RJSONIO::toJSON(blocks_in)
 write(blockJson, "../data/output/blocks_in_mun__nl.json")
 
 ## ------------------------------
-## Blocks to shapes
+## Data to Shape
 ## ------------------------------
 all_blocks_shp <- list()
 
@@ -250,11 +211,6 @@ poly      <- SpatialPolygonsDataFrame(
 
 ## Escribir resultados
 writeOGR(poly,
-         "../data/output/blocks/torre",
-         "block_torre",
+         "../data/output/blocks/saltillo",
+         "block_saltillo",
          driver = "ESRI Shapefile")
-
-
-## TEST PRECISON ##
-centers_in  <- centers[inside,]
-block_cp_in <- block_cp[inside]
